@@ -1,0 +1,25 @@
+# Copyright (C) 2012 Agustin Zubiaga
+# This file is distributed under the license GPLv3+
+# Agustin Zubiaga <aguz@sugarlabs.org>, 2012.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: 1\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2012-02-07 20:38-0200\n"
+"PO-Revision-Date: 2012-02-07 20:48-0200\n"
+"Last-Translator: Agustin Zubiaga <aguz@sugarlabs.org>\n"
+"Language-Team: Spanish\n"
+"Language: es\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=ASCII\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: activity/activity.info:2
+msgid "Notes"
+msgstr "Notas"
+
+#: activity.py:56
+msgid "Add a note"
+msgstr "Agregar una nota"
