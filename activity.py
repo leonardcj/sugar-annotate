@@ -29,6 +29,8 @@ from sugar.activity.widgets import StopButton
 from sugar.graphics.toolbarbox import ToolbarBox
 from sugar.graphics.toolbutton import ToolButton
 
+from notes import NotesArea
+
 
 class Notes(activity.Activity):
 
@@ -52,9 +54,10 @@ class Notes(activity.Activity):
         separator.set_expand(False)
         toolbarbox.toolbar.insert(separator, -1)
 
-        add = ToolButton('gtk-add')
-        add.set_tooltip(_('Add a note'))
-        toolbarbox.toolbar.insert(add, -1)
+        note_add = ToolButton('gtk-add')
+        note_add.set_tooltip(_('Add a note'))
+        note_add.connect("clicked", self.__add_note_cb)
+        toolbarbox.toolbar.insert(note_add, -1)
 
         separator = gtk.SeparatorToolItem()
         separator.set_draw(False)
@@ -66,4 +69,16 @@ class Notes(activity.Activity):
 
         self.set_toolbar_box(toolbarbox)
 
+        # CANVAS
+        scroll = gtk.ScrolledWindow()
+        scroll.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
+
+        self.notes_area = NotesArea()
+        scroll.add(self.notes_area)
+
+        self.set_canvas(scroll)
+
         self.show_all()
+
+    def __add_note_cb(self, widget):
+        self.notes_area.add_note()

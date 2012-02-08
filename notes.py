@@ -22,6 +22,53 @@ import gtk
 import pango
 
 
+class NotesArea(gtk.EventBox):
+
+    def __init__(self):
+        gtk.EventBox.__init__(self)
+
+        self.fixed = gtk.Fixed()
+        self.notes = []
+
+        self.add(self.fixed)
+        self.group = 1
+        self.count = 1
+
+        self.show_all()
+
+    def add_note(self):
+        note = Note()
+
+        if not self.notes:
+
+            self.fixed.put(note, 40, 40)
+            self.notes.append([(40, 40), note])
+
+        elif self.notes:
+            last_note_x, last_note_y = self.notes[-1][0]
+
+            if self.group == 1:
+                pos = (last_note_x + 240, 40)
+
+            elif self.group > 1:
+                pos = (40, 140 * self.group)
+
+            self.fixed.put(note, pos[0], pos[1])
+            self.notes.append([pos, note])
+
+        print self.count, self.group
+
+        if self.count != 3:
+            self.count += 1
+
+        elif self.count == 3:
+            self.group += 1
+            self.count = 0
+
+    def set_note_text(self, note=-1, text=""):
+        self.notes[note][1].set_text(text)
+
+
 class Note(gtk.DrawingArea):
 
     def __init__(self):
@@ -88,9 +135,12 @@ class Note(gtk.DrawingArea):
 
 if __name__ == "__main__":
     w = gtk.Window()
-    n = Note()
+    n = NotesArea()
     w.add(n)
-    w.set_border_width(10)
+    n.add_note()
+    n.add_note()
+    w.resize(800, 600)
     w.show_all()
-    n.set_text("ABCDEFGHIJ")
+    n.set_note_text(0, "Agu")
+    n.set_note_text(1, "Aguz")
     gtk.main()
