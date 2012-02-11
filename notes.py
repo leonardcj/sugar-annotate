@@ -21,52 +21,52 @@
 import gtk
 import pango
 
+WHITE = gtk.gdk.Color('#FFFFFF')
+
 
 class NotesArea(gtk.EventBox):
 
     def __init__(self):
         gtk.EventBox.__init__(self)
 
-        self.fixed = gtk.Fixed()
+        self.mainbox = gtk.VBox()
         self.notes = []
 
-        self.add(self.fixed)
-        self.group = 1
-        self.count = 1
+        self.add(self.mainbox)
+        self.groups = []
+        self.notes = []
+
+        self.modify_bg(gtk.STATE_NORMAL, WHITE)
+
+        self._add_box()
 
         self.show_all()
 
     def add_note(self):
         note = Note()
 
-        if not self.notes:
+        if not self.groups[-1].space:
+            self._add_box()
 
-            self.fixed.put(note, 40, 40)
-            self.notes.append([(40, 40), note])
+        last_box = self.groups[-1]
+        last_box.pack_start(note, False, True, 20)
+        last_box.space -= 1
 
-        elif self.notes:
-            last_note_x, last_note_y = self.notes[-1][0]
+        self.notes.append(note)
 
-            if self.group == 1:
-                pos = (last_note_x + 240, 40)
+        self.show_all()
 
-            elif self.group > 1:
-                pos = (40, 140 * self.group)
+        return note
 
-            self.fixed.put(note, pos[0], pos[1])
-            self.notes.append([pos, note])
+    def _add_box(self):
+        box = gtk.HBox()
+        box.space = 3
 
-        print self.count, self.group
+        self.mainbox.pack_start(box, False, True, 20)
+        self.groups.append(box)
 
-        if self.count != 3:
-            self.count += 1
-
-        elif self.count == 3:
-            self.group += 1
-            self.count = 0
-
-    def set_note_text(self, note=-1, text=""):
-        self.notes[note][1].set_text(text)
+    def set_note_text(self, note=-1, text=''):
+        self.notes[note].set_text(text)
 
 
 class Note(gtk.DrawingArea):
@@ -78,13 +78,20 @@ class Note(gtk.DrawingArea):
         self.set_size_request(200, 200)
         self.add_events(gtk.gdk.EXPOSURE_MASK | gtk.gdk.VISIBILITY_NOTIFY_MASK)
 
-        self.text = ""
+        self.text = ''
 
         pango_context = self.get_pango_context()
         self.layout = pango.Layout(pango_context)
         self.layout.set_alignment(pango.ALIGN_CENTER)
 
-        self.connect("expose-event", self._expose_cb)
+        self.add_events(gtk.gdk.BUTTON_PRESS_MASK |
+                        gtk.gdk.BUTTON_RELEASE_MASK |
+                        gtk.gdk.POINTER_MOTION_MASK |
+                        gtk.gdk.ENTER_NOTIFY_MASK |
+                        gtk.gdk.LEAVE_NOTIFY_MASK)
+
+        self.connect('expose-event', self._expose_cb)
+        self.connect('button-press-event', self.__button_press_cb)
 
         self.show_all()
 
@@ -99,48 +106,24 @@ class Note(gtk.DrawingArea):
         context.set_source_rgb(0, 0, 0)
         context.fill()
 
-        # White Background:
+        # Background rectangle:
         context.rectangle(0, 0, w - 2, w - 2)
-        context.set_source_rgb(0, 255, 0)
+        context.set_source_rgb(0, 120, 120)
         context.fill()
 
         # Write Text
         self.layout.set_markup(self.text)
-        layout_width = self._get_layout_width()
 
-        new_x = x + w / 2 - layout_width / 2
-
-        self.window.draw_layout(gc, new_x, 0, self.layout)
-
-    def _get_layout_width(self, text=None):
-        if not text:
-            text = self.text
-        str_long = len(text)
-        pixel_size = self.layout.get_pixel_size()[1]
-
-        layout_size = str_long * pixel_size
-
-        return layout_size
+        self.window.draw_layout(gc, 0, 0, self.layout)
 
     def set_text(self, text):
-        layout_width = self._get_layout_width(text)
-        x, y, w, h = self.get_allocation()
+		self.text = text
+		self.queue_draw()
 
-        if w > layout_width:
-            self.text = text
+    def __button_press_cb(self, widget, event):
+		window = gtk.Window()
+		entry = gtk.Entry()
+		entry.connect('changed', lambda w: self.set_text(w.get_text()))
 
-        else:
-            print "The text is longer than the Note (%s px / %s px)" % (
-                                                            layout_width, w)
-
-if __name__ == "__main__":
-    w = gtk.Window()
-    n = NotesArea()
-    w.add(n)
-    n.add_note()
-    n.add_note()
-    w.resize(800, 600)
-    w.show_all()
-    n.set_note_text(0, "Agu")
-    n.set_note_text(1, "Aguz")
-    gtk.main()
+		window.add(entry)
+		window.show_all()
