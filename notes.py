@@ -101,17 +101,17 @@ class Note(gtk.DrawingArea):
 
         x, y, w, h = self.get_allocation()
 
-        # Black Frame
+        # Black Frame:
         context.rectangle(0, 0, w, h)
         context.set_source_rgb(0, 0, 0)
         context.fill()
 
         # Background rectangle:
-        context.rectangle(0, 0, w - 2, w - 2)
-        context.set_source_rgb(0, 120, 120)
+        context.rectangle(0, 0, w - 1.5, w - 1.5)
+        context.set_source_rgb(56862, 59938, 0)
         context.fill()
 
-        # Write Text
+        # Write Text:
         self.layout.set_markup(self.text)
 
         self.window.draw_layout(gc, 0, 0, self.layout)
