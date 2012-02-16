@@ -21,7 +21,10 @@
 import gtk
 import pango
 
+from gettext import gettext as _
+
 WHITE = gtk.gdk.Color('#FFFFFF')
+ESC_KEY = 65307
 
 
 class NotesArea(gtk.EventBox):
@@ -49,12 +52,13 @@ class NotesArea(gtk.EventBox):
             self._add_box()
 
         last_box = self.groups[-1]
-        last_box.pack_start(note, False, True, 20)
+        last_box.pack_start(note.fixed, False, True, 20)
         last_box.space -= 1
 
         self.notes.append(note)
 
-        self.show_all()
+        note.fixed.show_all()
+        note.textview.frame.hide()
 
         return note
 
@@ -76,24 +80,40 @@ class Note(gtk.DrawingArea):
         gtk.DrawingArea.__init__(self)
 
         self.set_size_request(200, 200)
-        self.add_events(gtk.gdk.EXPOSURE_MASK | gtk.gdk.VISIBILITY_NOTIFY_MASK)
 
         self.text = ''
 
         pango_context = self.get_pango_context()
         self.layout = pango.Layout(pango_context)
-        self.layout.set_alignment(pango.ALIGN_CENTER)
 
-        self.add_events(gtk.gdk.BUTTON_PRESS_MASK |
+        self.add_events(gtk.gdk.EXPOSURE_MASK |
+                        gtk.gdk.VISIBILITY_NOTIFY_MASK |
+                        gtk.gdk.BUTTON_PRESS_MASK |
                         gtk.gdk.BUTTON_RELEASE_MASK |
                         gtk.gdk.POINTER_MOTION_MASK |
                         gtk.gdk.ENTER_NOTIFY_MASK |
                         gtk.gdk.LEAVE_NOTIFY_MASK)
 
         self.connect('expose-event', self._expose_cb)
-        self.connect('button-press-event', self.__button_press_cb)
+        self.connect('button-press-event', self.__edit_cb)
+        self.connect('button-press-event', self.__popup_menu_cb)
 
-        self.show_all()
+        self.fixed = gtk.Fixed()
+
+        self.fixed.put(self, 0, 0)
+
+        self.textview = gtk.TextView()
+        self.textview.set_property('width-request', 200)
+        self.textview.set_property('height-request', 200)
+
+        self.textview.connect('key-press-event', self.__hide_textview)
+
+        self.textview.frame = gtk.Frame()
+        self.textview.frame.modify_bg(gtk.STATE_NORMAL,
+                                      gtk.gdk.Color(0, 0, 0, 1))
+        self.textview.frame.add(self.textview)
+
+        self.fixed.put(self.textview.frame, 0, 0)
 
     def _expose_cb(self, widget, event):
         context = self.window.cairo_create()
@@ -120,10 +140,33 @@ class Note(gtk.DrawingArea):
         self.text = text
         self.queue_draw()
 
-    def __button_press_cb(self, widget, event):
-        window = gtk.Window()
-        entry = gtk.Entry()
-        entry.connect('changed', lambda w: self.set_text(w.get_text()))
+    def _set_text(self, widget):
+        buffer = widget.get_buffer()
+        start, end = buffer.get_bounds()
+        text = buffer.get_text(start, end)
 
-        window.add(entry)
-        window.show_all()
+        self.set_text(text)
+
+    def __edit_cb(self, widget, event):
+        if event.button == 1:
+            self.hide()
+            buf = self.textview.get_buffer()
+            buf.set_text(self.text)
+            self.textview.frame.show_all()
+
+    def __hide_textview(self, widget, event):
+        if event.keyval == ESC_KEY:
+            self._set_text(self.textview)
+
+            self.textview.frame.hide()
+            self.show()
+
+    def __popup_menu_cb(self, widget, event):
+        if event.button == 3:
+            popup_menu = gtk.Menu()
+
+            remove_note = gtk.MenuItem(_('Delete this note'))
+            popup_menu.append(remove_note)
+
+            popup_menu.popup(None, None, None, event.button, event.time, None)
+            popup_menu.show_all()
