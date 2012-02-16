@@ -19,7 +19,6 @@
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 import gtk
-import gobject
 import json
 
 from gettext import gettext as _
@@ -112,4 +111,3 @@ class Notes(activity.Activity):
             json.dump(tuple(data), f)
         finally:
             f.close()
-

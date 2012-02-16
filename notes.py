@@ -117,13 +117,13 @@ class Note(gtk.DrawingArea):
         self.window.draw_layout(gc, 0, 0, self.layout)
 
     def set_text(self, text):
-		self.text = text
-		self.queue_draw()
+        self.text = text
+        self.queue_draw()
 
     def __button_press_cb(self, widget, event):
-		window = gtk.Window()
-		entry = gtk.Entry()
-		entry.connect('changed', lambda w: self.set_text(w.get_text()))
+        window = gtk.Window()
+        entry = gtk.Entry()
+        entry.connect('changed', lambda w: self.set_text(w.get_text()))
 
-		window.add(entry)
-		window.show_all()
+        window.add(entry)
+        window.show_all()
