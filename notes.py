@@ -48,7 +48,7 @@ class NotesArea(gtk.EventBox):
 
     def add_note(self):
         note = Note()
-        note.connect('editing', self.__editing_cb)
+        note.connect('editing', self.__editing_note_cb)
 
         if not self.groups[-1].space:
             self._add_box()
@@ -77,15 +77,30 @@ class NotesArea(gtk.EventBox):
     def set_note_text(self, note=-1, text=''):
         self.notes[note].set_text(text)
 
-    def __editing_cb(self, note):
+    def __editing_note_cb(self, note):
         for i in self.notes:
             if i != note:
                 i.hide_textview()
 
+    def __note_removed_cb(self, note):
+        del self.notes[self.notes.index(note)]
+        self._relocate_notes()
+
+    def _relocate_notes(self):
+        data = [i.text for i in self.notes]
+
+        for i in self.groups:
+            i.destroy()
+
+        for i in data:
+            note = self.add_note()
+            note.set_text(i)
+
 
 class Note(gtk.DrawingArea):
 
-    __gsignals__ = {'editing': (gobject.SIGNAL_RUN_FIRST, None, [])}
+    __gsignals__ = {'editing': (gobject.SIGNAL_RUN_FIRST, None, []),
+                    'removed': (gobject.SIGNAL_RUN_FIRST, None, [])}
 
     def __init__(self):
 
@@ -183,7 +198,12 @@ class Note(gtk.DrawingArea):
             popup_menu = gtk.Menu()
 
             remove_note = gtk.MenuItem(_('Delete this note'))
+            remove_note.connect('activate', self._remove_note)
             popup_menu.append(remove_note)
 
             popup_menu.popup(None, None, None, event.button, event.time, None)
             popup_menu.show_all()
+
+    def _remove_note(self, widget):
+        self.fixed.destroy()
+        self.emit('removed')
