@@ -130,6 +130,11 @@ class Note(gtk.DrawingArea):
         self.fixed.put(self, 0, 0)
 
         self.textview = gtk.TextView()
+        self.textview.set_left_margin(15)
+        self.textview.set_right_margin(15)
+
+        self.textview.set_wrap_mode(gtk.WRAP_WORD)
+
         self.textview.set_property('width-request', 200)
         self.textview.set_property('height-request', 200)
 
@@ -159,9 +164,10 @@ class Note(gtk.DrawingArea):
         context.fill()
 
         # Write Text:
+
         self.layout.set_markup(self.text)
 
-        self.window.draw_layout(gc, 0, 0, self.layout)
+        self.window.draw_layout(gc, 15, 0, self.layout)
 
     def set_text(self, text):
         self.text = text
