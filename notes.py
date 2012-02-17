@@ -112,6 +112,8 @@ class Note(gtk.DrawingArea):
 
         pango_context = self.get_pango_context()
         self.layout = pango.Layout(pango_context)
+        self.layout.set_width(150 * pango.SCALE)
+        self.layout.set_wrap(pango.WRAP_WORD)
 
         self.add_events(gtk.gdk.EXPOSURE_MASK |
                         gtk.gdk.VISIBILITY_NOTIFY_MASK |
