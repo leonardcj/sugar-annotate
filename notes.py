@@ -19,6 +19,7 @@
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 import gtk
+import gobject
 import pango
 
 from gettext import gettext as _
@@ -47,6 +48,7 @@ class NotesArea(gtk.EventBox):
 
     def add_note(self):
         note = Note()
+        note.connect('editing', self.__editing_cb)
 
         if not self.groups[-1].space:
             self._add_box()
@@ -75,8 +77,15 @@ class NotesArea(gtk.EventBox):
     def set_note_text(self, note=-1, text=''):
         self.notes[note].set_text(text)
 
+    def __editing_cb(self, note):
+        for i in self.notes:
+            if i != note:
+                i.hide_textview()
+
 
 class Note(gtk.DrawingArea):
+
+    __gsignals__ = {'editing': (gobject.SIGNAL_RUN_FIRST, None, [])}
 
     def __init__(self):
 
@@ -109,7 +118,7 @@ class Note(gtk.DrawingArea):
         self.textview.set_property('width-request', 200)
         self.textview.set_property('height-request', 200)
 
-        self.textview.connect('key-press-event', self.__hide_textview)
+        self.textview.connect('key-press-event', self.__hide_textview_cb)
 
         self.textview.frame = gtk.Frame()
         self.textview.frame.modify_bg(gtk.STATE_NORMAL,
@@ -143,6 +152,16 @@ class Note(gtk.DrawingArea):
         self.text = text
         self.queue_draw()
 
+    def hide_textview(self):
+        self._set_text(self.textview)
+
+        self.textview.frame.hide()
+        self.show()
+
+    def __hide_textview_cb(self, widget, event):
+        if event.keyval == ESC_KEY:
+            self.hide_textview()
+
     def _set_text(self, widget):
         buffer = widget.get_buffer()
         start, end = buffer.get_bounds()
@@ -157,12 +176,7 @@ class Note(gtk.DrawingArea):
             buf.set_text(self.text)
             self.textview.frame.show_all()
 
-    def __hide_textview(self, widget, event):
-        if event.keyval == ESC_KEY:
-            self._set_text(self.textview)
-
-            self.textview.frame.hide()
-            self.show()
+            self.emit('editing')
 
     def __popup_menu_cb(self, widget, event):
         if event.button == 3:
