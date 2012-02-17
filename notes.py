@@ -22,7 +22,7 @@ import gtk
 import gobject
 import pango
 
-from gettext import gettext as _
+#from gettext import gettext as _
 
 WHITE = gtk.gdk.Color('#FFFFFF')
 ESC_KEY = 65307
@@ -197,7 +197,8 @@ class Note(gtk.DrawingArea):
         if event.button == 3:
             popup_menu = gtk.Menu()
 
-            remove_note = gtk.MenuItem(_('Delete this note'))
+            remove_note = gtk.ImageMenuItem(gtk.STOCK_REMOVE)
+            remove_note.set_use_stock(True)
             remove_note.connect('activate', self._remove_note)
             popup_menu.append(remove_note)
 
