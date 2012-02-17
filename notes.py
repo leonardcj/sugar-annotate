@@ -25,6 +25,15 @@ import pango
 #from gettext import gettext as _
 
 WHITE = gtk.gdk.Color('#FFFFFF')
+BLACK = gtk.gdk.Color('#000000')
+
+NOTE_WIDTH = 200
+NOTE_HEIGHT = 200
+LEFT_MARGIN = 15
+RIGHT_MARGIN = 15
+LAYOUT_WIDTH = NOTE_WIDTH - LEFT_MARGIN - RIGHT_MARGIN
+BOX_SPACE = 20
+
 ESC_KEY = 65307
 
 
@@ -54,7 +63,7 @@ class NotesArea(gtk.EventBox):
             self._add_box()
 
         last_box = self.groups[-1]
-        last_box.pack_start(note.fixed, False, True, 20)
+        last_box.pack_start(note.fixed, False, True, BOX_SPACE)
         last_box.space -= 1
 
         if last_box.space == 2:
@@ -71,7 +80,7 @@ class NotesArea(gtk.EventBox):
         box = gtk.HBox()
         box.space = 3
 
-        self.mainbox.pack_start(box, False, True, 20)
+        self.mainbox.pack_start(box, False, True, BOX_SPACE)
         self.groups.append(box)
 
     def set_note_text(self, note=-1, text=''):
@@ -106,13 +115,13 @@ class Note(gtk.DrawingArea):
 
         gtk.DrawingArea.__init__(self)
 
-        self.set_size_request(200, 200)
+        self.set_size_request(NOTE_WIDTH, NOTE_HEIGHT)
 
         self.text = ''
 
         pango_context = self.get_pango_context()
         self.layout = pango.Layout(pango_context)
-        self.layout.set_width(150 * pango.SCALE)
+        self.layout.set_width(LAYOUT_WIDTH * pango.SCALE)
         self.layout.set_wrap(pango.WRAP_WORD)
 
         self.add_events(gtk.gdk.EXPOSURE_MASK |
@@ -132,19 +141,19 @@ class Note(gtk.DrawingArea):
         self.fixed.put(self, 0, 0)
 
         self.textview = gtk.TextView()
-        self.textview.set_left_margin(15)
-        self.textview.set_right_margin(15)
+        self.textview.set_left_margin(LEFT_MARGIN)
+        self.textview.set_right_margin(RIGHT_MARGIN)
 
         self.textview.set_wrap_mode(gtk.WRAP_WORD)
 
-        self.textview.set_property('width-request', 200)
-        self.textview.set_property('height-request', 200)
+        self.textview.set_property('width-request', NOTE_WIDTH)
+        self.textview.set_property('height-request', NOTE_HEIGHT)
 
         self.textview.connect('key-press-event', self.__hide_textview_cb)
 
         self.textview.frame = gtk.Frame()
         self.textview.frame.modify_bg(gtk.STATE_NORMAL,
-                                      gtk.gdk.Color(0, 0, 0, 1))
+                                      BLACK)
         self.textview.frame.add(self.textview)
 
         self.fixed.put(self.textview.frame, 0, 0)
@@ -161,7 +170,7 @@ class Note(gtk.DrawingArea):
         context.fill()
 
         # Background rectangle:
-        context.rectangle(0, 0, w - 1.5, w - 1.5)
+        context.rectangle(0, 0, w - 1.5, h - 1.5)
         context.set_source_rgb(56862, 59938, 0)
         context.fill()
 
@@ -169,7 +178,7 @@ class Note(gtk.DrawingArea):
 
         self.layout.set_markup(self.text)
 
-        self.window.draw_layout(gc, 15, 0, self.layout)
+        self.window.draw_layout(gc, LEFT_MARGIN, 0, self.layout)
 
     def set_text(self, text):
         self.text = text
