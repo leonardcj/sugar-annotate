@@ -55,6 +55,9 @@ class NotesArea(gtk.EventBox):
         last_box.pack_start(note.fixed, False, True, 20)
         last_box.space -= 1
 
+        if last_box.space == 2:
+            last_box.show_all()
+
         self.notes.append(note)
 
         note.fixed.show_all()
