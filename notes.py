@@ -21,6 +21,9 @@
 import gtk
 import gobject
 import pango
+import gconf
+
+from sugar.graphics.style import Color
 
 #from gettext import gettext as _
 
@@ -34,6 +37,17 @@ LAYOUT_WIDTH = LAYOUT_WIDTH = NOTE_WIDTH - (MARGIN * 2)
 BOX_SPACE = 20
 
 ESC_KEY = 65307
+
+
+def get_colors():
+    client = gconf.client_get_default()
+    colors = client.get_string('/desktop/sugar/user/color')
+    colors = colors.split(',')
+
+    stroke = Color(colors[0]).get_rgba()
+    fill = Color(colors[1]).get_rgba()
+
+    return stroke, fill
 
 
 class NotesArea(gtk.EventBox):
@@ -168,14 +182,16 @@ class Note(gtk.DrawingArea):
 
         x, y, w, h = self.get_allocation()
 
+        stroke, fill = get_colors()
+
         # Black Frame:
         context.rectangle(0, 0, w, h)
-        context.set_source_rgb(0, 0, 0)
+        context.set_source_rgb(stroke[0], stroke[1], stroke[2])
         context.fill()
 
         # Background rectangle:
-        context.rectangle(0, 0, w - 1.5, h - 1.5)
-        context.set_source_rgb(56862, 59938, 0)
+        context.rectangle(0, 0, w - 2, h - 2)
+        context.set_source_rgb(fill[0], fill[1], fill[2])
         context.fill()
 
         # Write Text:
