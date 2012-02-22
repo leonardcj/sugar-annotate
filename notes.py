@@ -2,7 +2,7 @@
 # -*- coding: UTF-8 -*-
 
 # activity.py by:
-#    Agustin Zubiaga <aguz@sugarlabs.com>
+#    Agustin Zubiaga <aguz@sugarlabs.org>
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -29,9 +29,8 @@ BLACK = gtk.gdk.Color('#000000')
 
 NOTE_WIDTH = 200
 NOTE_HEIGHT = 200
-LEFT_MARGIN = 15
-RIGHT_MARGIN = 15
-LAYOUT_WIDTH = NOTE_WIDTH - LEFT_MARGIN - RIGHT_MARGIN
+MARGIN = 15
+LAYOUT_WIDTH = LAYOUT_WIDTH = NOTE_WIDTH - (MARGIN * 2)
 BOX_SPACE = 20
 
 ESC_KEY = 65307
@@ -58,6 +57,7 @@ class NotesArea(gtk.EventBox):
     def add_note(self):
         note = Note()
         note.connect('editing', self.__editing_note_cb)
+        note.connect('removed', self.__note_removed_cb)
 
         if not self.groups[-1].space:
             self._add_box()
@@ -92,7 +92,6 @@ class NotesArea(gtk.EventBox):
                 i.hide_textview()
 
     def __note_removed_cb(self, note):
-        del self.notes[self.notes.index(note)]
         self._relocate_notes()
 
     def _relocate_notes(self):
@@ -100,6 +99,11 @@ class NotesArea(gtk.EventBox):
 
         for i in self.groups:
             i.destroy()
+
+        self.groups = []
+        self._add_box()
+
+        self.notes = []
 
         for i in data:
             note = self.add_note()
@@ -141,8 +145,8 @@ class Note(gtk.DrawingArea):
         self.fixed.put(self, 0, 0)
 
         self.textview = gtk.TextView()
-        self.textview.set_left_margin(LEFT_MARGIN)
-        self.textview.set_right_margin(RIGHT_MARGIN)
+        self.textview.set_left_margin(MARGIN)
+        self.textview.set_right_margin(MARGIN)
 
         self.textview.set_wrap_mode(gtk.WRAP_WORD)
 
@@ -178,10 +182,11 @@ class Note(gtk.DrawingArea):
 
         self.layout.set_markup(self.text)
 
-        self.window.draw_layout(gc, LEFT_MARGIN, 0, self.layout)
+        self.window.draw_layout(gc, MARGIN, 0, self.layout)
 
     def set_text(self, text):
         self.text = text
+        self.textview.get_buffer().set_text(text)
         self.queue_draw()
 
     def hide_textview(self):
