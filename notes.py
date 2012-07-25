@@ -33,9 +33,10 @@ BLACK = gtk.gdk.Color('#000000')
 NOTE_WIDTH = 200
 NOTE_HEIGHT = 200
 MARGIN = 15
-LAYOUT_WIDTH = LAYOUT_WIDTH = NOTE_WIDTH - (MARGIN * 2)
+LAYOUT_WIDTH = NOTE_WIDTH - (MARGIN * 2)
 BOX_SPACE = 20
 
+SPACE_DEFAULT = int(gtk.gdk.screen_width() / NOTE_WIDTH)
 ESC_KEY = 65307
 
 
@@ -80,7 +81,7 @@ class NotesArea(gtk.EventBox):
         last_box.pack_start(note.fixed, False, True, BOX_SPACE)
         last_box.space -= 1
 
-        if last_box.space == 2:
+        if last_box.space == SPACE_DEFAULT - 1:
             last_box.show_all()
 
         self.notes.append(note)
@@ -92,7 +93,7 @@ class NotesArea(gtk.EventBox):
 
     def _add_box(self):
         box = gtk.HBox()
-        box.space = 3
+        box.space = SPACE_DEFAULT
 
         self.mainbox.pack_start(box, False, True, BOX_SPACE)
         self.groups.append(box)
@@ -140,15 +141,11 @@ class Note(gtk.DrawingArea):
         pango_context = self.get_pango_context()
         self.layout = pango.Layout(pango_context)
         self.layout.set_width(LAYOUT_WIDTH * pango.SCALE)
-        self.layout.set_wrap(pango.WRAP_WORD)
+        self.layout.set_wrap(pango.WRAP_WORD_CHAR)
 
-        self.add_events(gtk.gdk.EXPOSURE_MASK |
-                        gtk.gdk.VISIBILITY_NOTIFY_MASK |
-                        gtk.gdk.BUTTON_PRESS_MASK |
+        self.add_events(gtk.gdk.BUTTON_PRESS_MASK |
                         gtk.gdk.BUTTON_RELEASE_MASK |
-                        gtk.gdk.POINTER_MOTION_MASK |
-                        gtk.gdk.ENTER_NOTIFY_MASK |
-                        gtk.gdk.LEAVE_NOTIFY_MASK)
+                        gtk.gdk.POINTER_MOTION_MASK)
 
         self.connect('expose-event', self._expose_cb)
         self.connect('button-press-event', self.__edit_cb)
@@ -162,16 +159,19 @@ class Note(gtk.DrawingArea):
         self.textview.set_left_margin(MARGIN)
         self.textview.set_right_margin(MARGIN)
 
-        self.textview.set_wrap_mode(gtk.WRAP_WORD)
+        self.textview.set_wrap_mode(gtk.WRAP_WORD_CHAR)
 
         self.textview.set_property('width-request', NOTE_WIDTH)
         self.textview.set_property('height-request', NOTE_HEIGHT)
 
         self.textview.connect('key-press-event', self.__hide_textview_cb)
 
+        stroke, fill = get_colors()
+        self.textview.modify_base(gtk.STATE_NORMAL,
+                                  gtk.gdk.Color(fill[0], fill[1], fill[2]))
         self.textview.frame = gtk.Frame()
         self.textview.frame.modify_bg(gtk.STATE_NORMAL,
-                                      BLACK)
+                                gtk.gdk.Color(stroke[0], stroke[1], stroke[2]))
         self.textview.frame.add(self.textview)
 
         self.fixed.put(self.textview.frame, 0, 0)
@@ -216,9 +216,9 @@ class Note(gtk.DrawingArea):
             self.hide_textview()
 
     def _set_text(self, widget):
-        buffer = widget.get_buffer()
-        start, end = buffer.get_bounds()
-        text = buffer.get_text(start, end)
+        _buffer = widget.get_buffer()
+        start, end = _buffer.get_bounds()
+        text = _buffer.get_text(start, end)
 
         self.set_text(text)
 
@@ -228,6 +228,7 @@ class Note(gtk.DrawingArea):
             buf = self.textview.get_buffer()
             buf.set_text(self.text)
             self.textview.frame.show_all()
+            self.textview.props.is_focus = True
 
             self.emit('editing')
 
