@@ -32,7 +32,7 @@ from sugar.graphics.toolbutton import ToolButton
 from notes import NotesArea
 
 
-class Notes(activity.Activity):
+class Annotate(activity.Activity):
 
     def __init__(self, handle):
 

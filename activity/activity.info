@@ -1,8 +1,7 @@
-
 [Activity]
-name = Notes
+name = Annotate
 activity_version = 1
-bundle_id = org.sugarlabs.Notes
-exec = sugar-activity activity.Notes -s
-icon = notes
+bundle_id = org.sugarlabs.Annotate
+exec = sugar-activity activity.Annotate -s
+icon = annotate
 license = GPLv3+
