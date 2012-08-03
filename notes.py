@@ -35,7 +35,6 @@ LAYOUT_WIDTH = NOTE_WIDTH - (MARGIN * 2)
 BOX_SPACE = 20
 
 SPACE_DEFAULT = int(gtk.gdk.screen_width() / (NOTE_WIDTH + (BOX_SPACE / 2)))
-print SPACE_DEFAULT
 ESC_KEY = 65307
 
 
