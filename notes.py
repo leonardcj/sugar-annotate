@@ -25,8 +25,6 @@ import gconf
 
 from sugar.graphics.style import Color
 
-#from gettext import gettext as _
-
 WHITE = gtk.gdk.Color('#FFFFFF')
 BLACK = gtk.gdk.Color('#000000')
 

@@ -43,7 +43,7 @@ class Annotate(activity.Activity):
 
         # CANVAS
         scroll = gtk.ScrolledWindow()
-        scroll.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
+        scroll.set_policy(gtk.POLICY_NEVER, gtk.POLICY_AUTOMATIC)
 
         self.notes_area = NotesArea()
         scroll.add_with_viewport(self.notes_area)
@@ -78,11 +78,13 @@ class Annotate(activity.Activity):
         toolbarbox.toolbar.insert(separator, -1)
 
         back = ToolButton('go-left')
+        back.set_tooltip(_('Select previous note'))
         back.set_sensitive(False)
         back.connect('clicked', lambda w: self.notes_area.select_note(-1))
         toolbarbox.toolbar.insert(back, -1)
 
         _next = ToolButton('go-right')
+        _next.set_tooltip(_('Select next note'))
         _next.connect('clicked', lambda w: self.notes_area.select_note(+1))
         _next.set_sensitive(False)
         toolbarbox.toolbar.insert(_next, -1)
