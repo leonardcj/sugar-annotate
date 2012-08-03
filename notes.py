@@ -35,7 +35,10 @@ LAYOUT_WIDTH = NOTE_WIDTH - (MARGIN * 2)
 BOX_SPACE = 20
 
 SPACE_DEFAULT = int(gtk.gdk.screen_width() / (NOTE_WIDTH + (BOX_SPACE / 2)))
+
 ESC_KEY = 65307
+TAB_KEY = 65289
+SHIFT_TAB_KEY = 65056
 
 
 def get_colors():
@@ -170,7 +173,6 @@ class Note(gtk.DrawingArea):
         self.connect('button-press-event', self.edit)
 
         self.fixed = gtk.Fixed()
-
         self.fixed.put(self, 0, 0)
 
         self.textview = gtk.TextView()
@@ -182,7 +184,7 @@ class Note(gtk.DrawingArea):
         self.textview.set_property('width-request', NOTE_WIDTH)
         self.textview.set_property('height-request', NOTE_HEIGHT)
 
-        self.textview.connect('key-press-event', self.__hide_textview_cb)
+        self.textview.connect('key-press-event', self._key_press_event_cb)
 
         stroke, fill = get_colors()
         self.textview.modify_base(gtk.STATE_NORMAL,
@@ -232,9 +234,15 @@ class Note(gtk.DrawingArea):
         self.editing = False
         self.show()
 
-    def __hide_textview_cb(self, widget, event):
+    def _key_press_event_cb(self, widget, event):
         if event.keyval == ESC_KEY:
             self.hide_textview()
+
+        elif event.keyval == TAB_KEY:
+            self._notes_area.select_note(+1)
+
+        elif event.keyval == SHIFT_TAB_KEY:
+            self._notes_area.select_note(-1)
 
     def _set_text(self, widget):
         _buffer = widget.get_buffer()
