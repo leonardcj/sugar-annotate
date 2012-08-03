@@ -36,7 +36,8 @@ MARGIN = 15
 LAYOUT_WIDTH = NOTE_WIDTH - (MARGIN * 2)
 BOX_SPACE = 20
 
-SPACE_DEFAULT = int(gtk.gdk.screen_width() / NOTE_WIDTH)
+SPACE_DEFAULT = int(gtk.gdk.screen_width() / (NOTE_WIDTH + (BOX_SPACE / 2)))
+print SPACE_DEFAULT
 ESC_KEY = 65307
 
 
@@ -53,6 +54,9 @@ def get_colors():
 
 class NotesArea(gtk.EventBox):
 
+    __gsignals__ = {'no-notes': (gobject.SIGNAL_RUN_FIRST, None, []),
+                    'note-added': (gobject.SIGNAL_RUN_FIRST, None, [])}
+
     def __init__(self):
         gtk.EventBox.__init__(self)
 
@@ -62,6 +66,7 @@ class NotesArea(gtk.EventBox):
         self.add(self.mainbox)
         self.groups = []
         self.notes = []
+        self.removing = False
 
         self.modify_bg(gtk.STATE_NORMAL, WHITE)
 
@@ -69,10 +74,24 @@ class NotesArea(gtk.EventBox):
 
         self.show_all()
 
+    def select_note(self, position):
+        editing = None
+        for note in self.notes:
+            if note.editing:
+                editing = note
+
+        try:
+            if editing:
+                next_note = self.notes[self.notes.index(editing) + position]
+                next_note.edit()
+            else:
+                self.notes[0].edit()
+        except:
+            self.notes[0].edit()
+
     def add_note(self):
-        note = Note()
+        note = Note(self)
         note.connect('editing', self.__editing_note_cb)
-        note.connect('removed', self.__note_removed_cb)
 
         if not self.groups[-1].space:
             self._add_box()
@@ -88,6 +107,8 @@ class NotesArea(gtk.EventBox):
 
         note.fixed.show_all()
         note.textview.frame.hide()
+
+        self.emit('note-added')
 
         return note
 
@@ -106,10 +127,7 @@ class NotesArea(gtk.EventBox):
             if i != note:
                 i.hide_textview()
 
-    def __note_removed_cb(self, note):
-        self._relocate_notes()
-
-    def _relocate_notes(self):
+    def relocate_notes(self):
         data = [i.text for i in self.notes]
 
         for i in self.groups:
@@ -120,6 +138,10 @@ class NotesArea(gtk.EventBox):
 
         self.notes = []
 
+        if not data:
+            self.removing = False
+            self.emit("no-notes")
+
         for i in data:
             note = self.add_note()
             note.set_text(i)
@@ -127,16 +149,16 @@ class NotesArea(gtk.EventBox):
 
 class Note(gtk.DrawingArea):
 
-    __gsignals__ = {'editing': (gobject.SIGNAL_RUN_FIRST, None, []),
-                    'removed': (gobject.SIGNAL_RUN_FIRST, None, [])}
+    __gsignals__ = {'editing': (gobject.SIGNAL_RUN_FIRST, None, [])}
 
-    def __init__(self):
+    def __init__(self, notes_area):
 
         gtk.DrawingArea.__init__(self)
 
         self.set_size_request(NOTE_WIDTH, NOTE_HEIGHT)
 
         self.text = ''
+        self.editing = False
 
         pango_context = self.get_pango_context()
         self.layout = pango.Layout(pango_context)
@@ -148,8 +170,7 @@ class Note(gtk.DrawingArea):
                         gtk.gdk.POINTER_MOTION_MASK)
 
         self.connect('expose-event', self._expose_cb)
-        self.connect('button-press-event', self.__edit_cb)
-        self.connect('button-press-event', self.__popup_menu_cb)
+        self.connect('button-press-event', self.edit)
 
         self.fixed = gtk.Fixed()
 
@@ -175,6 +196,8 @@ class Note(gtk.DrawingArea):
         self.textview.frame.add(self.textview)
 
         self.fixed.put(self.textview.frame, 0, 0)
+
+        self._notes_area = notes_area
 
     def _expose_cb(self, widget, event):
         context = self.window.cairo_create()
@@ -209,6 +232,7 @@ class Note(gtk.DrawingArea):
         self._set_text(self.textview)
 
         self.textview.frame.hide()
+        self.editing = False
         self.show()
 
     def __hide_textview_cb(self, widget, event):
@@ -222,28 +246,20 @@ class Note(gtk.DrawingArea):
 
         self.set_text(text)
 
-    def __edit_cb(self, widget, event):
-        if event.button == 1:
+    def edit(self, *kwargs):
+        if not self._notes_area.removing:
             self.hide()
             buf = self.textview.get_buffer()
             buf.set_text(self.text)
             self.textview.frame.show_all()
             self.textview.props.is_focus = True
 
+            self.editing = True
             self.emit('editing')
-
-    def __popup_menu_cb(self, widget, event):
-        if event.button == 3:
-            popup_menu = gtk.Menu()
-
-            remove_note = gtk.ImageMenuItem(gtk.STOCK_REMOVE)
-            remove_note.set_use_stock(True)
-            remove_note.connect('activate', self._remove_note)
-            popup_menu.append(remove_note)
-
-            popup_menu.popup(None, None, None, event.button, event.time, None)
-            popup_menu.show_all()
+        else:
+            self._remove_note(None)
 
     def _remove_note(self, widget):
         self.fixed.destroy()
-        self.emit('removed')
+        self._notes_area.notes.remove(self)
+        self._notes_area.relocate_notes()
