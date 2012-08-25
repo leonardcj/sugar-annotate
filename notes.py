@@ -23,16 +23,16 @@ import gobject
 import pango
 import gconf
 
-from sugar.graphics.style import Color
+from sugar.graphics import style
 
 WHITE = gtk.gdk.Color('#FFFFFF')
 BLACK = gtk.gdk.Color('#000000')
 
-NOTE_WIDTH = 200
-NOTE_HEIGHT = 200
-MARGIN = 15
+NOTE_WIDTH = style.zoom(279)
+NOTE_HEIGHT = style.zoom(279)
+MARGIN = style.zoom(21)
 LAYOUT_WIDTH = NOTE_WIDTH - (MARGIN * 2)
-BOX_SPACE = 20
+BOX_SPACE = style.zoom(29)
 
 SPACE_DEFAULT = int(gtk.gdk.screen_width() / (NOTE_WIDTH + (BOX_SPACE / 2)))
 
@@ -46,8 +46,8 @@ def get_colors():
     colors = client.get_string('/desktop/sugar/user/color')
     colors = colors.split(',')
 
-    stroke = Color(colors[0]).get_rgba()
-    fill = Color(colors[1]).get_rgba()
+    stroke = style.Color(colors[0]).get_rgba()
+    fill = style.Color(colors[1]).get_rgba()
 
     return stroke, fill
 
@@ -74,12 +74,18 @@ class NotesArea(gtk.EventBox):
 
         self.show_all()
 
+    def set_removing(self, removing=False):
+        self.removing = removing
+
+        if removing:
+            for note in self.notes:
+                note.hide_textview()
+
     def select_note(self, position):
         editing = None
         for note in self.notes:
             if note.editing:
                 editing = note
-
         try:
             if editing:
                 next_note = self.notes[self.notes.index(editing) + position]
@@ -89,8 +95,8 @@ class NotesArea(gtk.EventBox):
         except:
             self.notes[0].edit()
 
-    def add_note(self):
-        note = Note(self)
+    def add_note(self, anim):
+        note = Note(self, fade_in=anim)
         note.connect('editing', self.__editing_note_cb)
 
         if not self.groups[-1].space:
@@ -143,15 +149,18 @@ class NotesArea(gtk.EventBox):
             self.emit("no-notes")
 
         for i in data:
-            note = self.add_note()
+            note = self.add_note(False)
             note.set_text(i)
+
+    def remove_note(self, index):
+        self.notes[index]._remove_note(None)
 
 
 class Note(gtk.DrawingArea):
 
     __gsignals__ = {'editing': (gobject.SIGNAL_RUN_FIRST, None, [])}
 
-    def __init__(self, notes_area):
+    def __init__(self, notes_area, fade_in=False):
 
         gtk.DrawingArea.__init__(self)
 
@@ -159,6 +168,7 @@ class Note(gtk.DrawingArea):
 
         self.text = ''
         self.editing = False
+        self._opacity = 0 if fade_in else 1
 
         pango_context = self.get_pango_context()
         self.layout = pango.Layout(pango_context)
@@ -173,6 +183,7 @@ class Note(gtk.DrawingArea):
         self.connect('button-press-event', self.edit)
 
         self.fixed = gtk.Fixed()
+        self.fixed.modify_bg(gtk.STATE_NORMAL, WHITE)
         self.fixed.put(self, 0, 0)
 
         self.textview = gtk.TextView()
@@ -196,6 +207,9 @@ class Note(gtk.DrawingArea):
 
         self.fixed.put(self.textview.frame, 0, 0)
 
+        if fade_in:
+            gobject.timeout_add(50, self._fade_in_animation)
+
         self._notes_area = notes_area
 
     def _expose_cb(self, widget, event):
@@ -208,19 +222,36 @@ class Note(gtk.DrawingArea):
 
         # Black Frame:
         context.rectangle(0, 0, w, h)
-        context.set_source_rgb(stroke[0], stroke[1], stroke[2])
+        context.set_source_rgba(stroke[0], stroke[1], stroke[2], self._opacity)
         context.fill()
 
         # Background rectangle:
         context.rectangle(0, 0, w - 2, h - 2)
-        context.set_source_rgb(fill[0], fill[1], fill[2])
+        context.set_source_rgba(fill[0], fill[1], fill[2], self._opacity)
         context.fill()
 
         # Write Text:
-
         self.layout.set_markup(self.text)
-
         self.window.draw_layout(gc, MARGIN, 0, self.layout)
+
+    def _fade_in_animation(self):
+        self._opacity += 0.1
+        self.queue_draw()
+
+        return True if self._opacity <= 1.0 else False
+
+    def _fade_out_animation(self):
+        self._opacity -= 0.1
+        self.queue_draw()
+
+        if self._opacity <= 0.0:
+            self.fixed.destroy()
+            self._notes_area.notes.remove(self)
+            self._notes_area.relocate_notes()
+            return False
+
+        else:
+            return True
 
     def set_text(self, text):
         self.text = text
@@ -265,6 +296,4 @@ class Note(gtk.DrawingArea):
             self._remove_note(None)
 
     def _remove_note(self, widget):
-        self.fixed.destroy()
-        self._notes_area.notes.remove(self)
-        self._notes_area.relocate_notes()
+        gobject.timeout_add(50, self._fade_out_animation)

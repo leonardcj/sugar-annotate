@@ -24,7 +24,7 @@ import json
 from gettext import gettext as _
 
 from sugar.activity import activity
-from sugar.activity.widgets import ActivityButton
+from sugar.activity.widgets import ActivityToolbarButton
 from sugar.activity.widgets import StopButton
 from sugar.graphics.toolbarbox import ToolbarBox
 from sugar.graphics.toolbutton import ToolButton
@@ -53,13 +53,11 @@ class Annotate(activity.Activity):
         # TOOLBARS
         toolbarbox = ToolbarBox()
 
-        self.activity_button = ActivityButton(self)
-        toolbarbox.toolbar.insert(self.activity_button, 0)
-        self.activity_button.show()
+        activity_button = ActivityToolbarButton(self)
+        toolbarbox.toolbar.insert(activity_button, 0)
+        activity_button.show()
 
         separator = gtk.SeparatorToolItem()
-        separator.set_draw(True)
-        separator.set_expand(False)
         toolbarbox.toolbar.insert(separator, -1)
 
         note_add = ToolButton('gtk-add')
@@ -73,8 +71,6 @@ class Annotate(activity.Activity):
         toolbarbox.toolbar.insert(note_remove, -1)
 
         separator = gtk.SeparatorToolItem()
-        separator.set_draw(True)
-        separator.set_expand(False)
         toolbarbox.toolbar.insert(separator, -1)
 
         back = ToolButton('go-left')
@@ -115,10 +111,10 @@ class Annotate(activity.Activity):
         _next.set_sensitive(True)
 
     def __add_note_cb(self, widget):
-        self.notes_area.add_note()
+        self.notes_area.add_note(True)
 
     def _active_remove(self, widget):
-        self.notes_area.removing = widget.get_active()
+        self.notes_area.set_removing(widget.get_active())
 
     def read_file(self, file_path):
         f = open(file_path, 'r')
@@ -129,12 +125,13 @@ class Annotate(activity.Activity):
             f.close()
 
         for i in data:
-            note = self.notes_area.add_note()
+            note = self.notes_area.add_note(True)
             note.set_text(i)
 
     def write_file(self, file_path):
-        f = open(file_path, 'w')
+        self.notes_area.set_removing(True)
 
+        f = open(file_path, 'w')
         data = [i.text for i in self.notes_area.notes]
 
         try:
