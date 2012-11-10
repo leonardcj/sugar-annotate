@@ -34,7 +34,7 @@ MARGIN = style.zoom(21)
 LAYOUT_WIDTH = NOTE_WIDTH - (MARGIN * 2)
 BOX_SPACE = style.zoom(29)
 
-SPACE_DEFAULT = int(gtk.gdk.screen_width() / (NOTE_WIDTH + (BOX_SPACE / 2)))
+SPACE_DEFAULT = int(gtk.gdk.screen_width() / (NOTE_WIDTH + BOX_SPACE))
 
 ESC_KEY = 65307
 TAB_KEY = 65289
