@@ -19,6 +19,7 @@
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 import gtk
+import os
 import json
 
 from gettext import gettext as _
@@ -31,6 +32,10 @@ from sugar.graphics.toolbutton import ToolButton
 from sugar.graphics.toggletoolbutton import ToggleToolButton
 
 from notes import NotesArea
+
+REMOVE_CURSOR = os.path.join(activity.get_bundle_path(),
+                             'cursors',
+                             'remove.png')
 
 
 class Annotate(activity.Activity):
@@ -115,6 +120,13 @@ class Annotate(activity.Activity):
 
     def _active_remove(self, widget):
         self.notes_area.set_removing(widget.get_active())
+        if widget.get_active():
+            display = gtk.gdk.display_get_default()
+            pixbuf = gtk.gdk.pixbuf_new_from_file(REMOVE_CURSOR)
+            cursor = gtk.gdk.Cursor(display, pixbuf, 0, 0)
+        else:
+            cursor = gtk.gdk.Cursor(gtk.gdk.LEFT_PTR)
+        self.notes_area.window.set_cursor(cursor)
 
     def read_file(self, file_path):
         f = open(file_path, 'r')
