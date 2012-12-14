@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2012-11-10 15:05-0200\n"
+"POT-Creation-Date: 2012-12-14 14:15-0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -21,18 +21,30 @@ msgstr ""
 msgid "Annotate"
 msgstr ""
 
-#: activity.py:69
-msgid "Add a note"
+#: help.py:32 help.py:89
+msgid "Help of Annotate"
 msgstr ""
 
-#: activity.py:74
-msgid "Remove notes"
+#: activity.py:78
+msgid "Help"
 msgstr ""
 
 #: activity.py:82
+msgid "Add a note"
+msgstr ""
+
+#: activity.py:87
+msgid "Remove notes"
+msgstr ""
+
+#: activity.py:95
 msgid "Select previous note"
 msgstr ""
 
-#: activity.py:88
+#: activity.py:101
 msgid "Select next note"
+msgstr ""
+
+#: activity.py:144
+msgid "Select a date (double-click)"
 msgstr ""
