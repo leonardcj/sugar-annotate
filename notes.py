@@ -69,9 +69,6 @@ class NotesArea(gtk.EventBox):
         self.groups = []
         self.notes = []
         self.removing = False
-        self.day = None
-        self.month = None
-        self.year = None
 
         self.modify_bg(gtk.STATE_NORMAL, WHITE)
 
@@ -101,10 +98,7 @@ class NotesArea(gtk.EventBox):
             self.notes[0].edit()
 
     def add_note(self, anim=None, date=None):
-        if date is not  None:
-            note = Note(self, fade_in=anim, date=date)
-        else:
-            note = Note(self, fade_in=anim)
+        note = Note(self, fade_in=anim, date=date)
         note.connect('editing', self.__editing_note_cb)
 
         if not self.groups[-1].space:
@@ -170,12 +164,14 @@ class Note(gtk.DrawingArea):
     def __init__(self, notes_area, fade_in=False, date=None):
 
         gtk.DrawingArea.__init__(self)
+        
         # Simple tooltip with date.
         if date is not None:
             day = str(date[2])
             month = str(int(date[1] + 1))
             year = str(date[0])
-            self.set_tooltip_text(str(day + "/" + month + "/" + year))
+            self._date = [day, month, year]
+            self.set_tooltip_text(str(day + '/' + month + '/' + year))
 
         self.set_size_request(NOTE_WIDTH, NOTE_HEIGHT)
 
