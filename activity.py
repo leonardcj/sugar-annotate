@@ -33,7 +33,6 @@ from sugar.graphics.toolbutton import ToolButton
 from sugar.graphics.toggletoolbutton import ToggleToolButton
 
 from notes import NotesArea
-from help import helpwindow
 
 
 REMOVE_CURSOR = os.path.join(activity.get_bundle_path(),
@@ -48,14 +47,14 @@ class Annotate(activity.Activity):
         activity.Activity.__init__(self, handle, True)
 
         self.max_participants = 1
-        # CALENDAR
-        self.calendar = gtk.Calendar()
-        self.calendar.connect('day-selected-double-click', self.__add_note_cb)
+        
+        # Calendar
+        self._calendar = gtk.Calendar()
 
-        # HELP WINDOW
-        self.helpwindow = helpwindow()
+        # TODO: Create a Help dialog like Implode
+        #self._helpdialog = HelpDialog()
 
-        # CANVAS
+        # Canvas
         scroll = gtk.ScrolledWindow()
         scroll.set_policy(gtk.POLICY_NEVER, gtk.POLICY_AUTOMATIC)
 
@@ -64,7 +63,7 @@ class Annotate(activity.Activity):
 
         self.set_canvas(scroll)
 
-        # TOOLBARS
+        # Toolbars
         toolbarbox = ToolbarBox()
 
         activity_button = ActivityToolbarButton(self)
@@ -74,14 +73,12 @@ class Annotate(activity.Activity):
         separator = gtk.SeparatorToolItem()
         toolbarbox.toolbar.insert(separator, -1)
 
-        helpbtn = ToolButton('helpbtn')
-        helpbtn.set_tooltip(_('Help'))
-        helpbtn.connect('clicked', self.help)
-
         note_add = ToolButton('gtk-add')
         note_add.set_tooltip(_('Add a note'))
         note_add.connect('clicked', self._show_add_button_pallete)
         toolbarbox.toolbar.insert(note_add, -1)
+
+        self._calendar.connect('day-selected', self.__add_note_cb, note_add)
 
         note_remove = ToggleToolButton('gtk-remove')
         note_remove.set_tooltip(_('Remove notes'))
@@ -103,13 +100,17 @@ class Annotate(activity.Activity):
         _next.set_sensitive(False)
         toolbarbox.toolbar.insert(_next, -1)
 
+        #helpbtn = ToolButton('toolbar-help')
+        #helpbtn.set_tooltip(_('Help'))
+        #helpbtn.connect('clicked', self.help)
+        #toolbarbox.toolbar.insert(helpbtn)
+
         separator = gtk.SeparatorToolItem()
         separator.set_draw(False)
         separator.set_expand(True)
         toolbarbox.toolbar.insert(separator, -1)
 
         stopbtn = StopButton(self)
-        toolbarbox.toolbar.insert(helpbtn, -1)
         toolbarbox.toolbar.insert(stopbtn, -1)
         self.set_toolbar_box(toolbarbox)
 
@@ -121,9 +122,8 @@ class Annotate(activity.Activity):
 
         self._create_add_button_pallete(note_add)
 
-    def help(self, widget):
-        self.helpwindow.hide()
-        self.helpwindow.show()
+    def show_help_dialog(self, widget):
+        self._helpdialog.show()
 
     def _no_notes(self, widget, note_remove, back, _next):
         note_remove.set_active(False)
@@ -139,16 +139,12 @@ class Annotate(activity.Activity):
 
     def _create_add_button_pallete(self, button):
         palette = button.get_palette()
-        self.vbox = gtk.VBox()
-        self.calendar.modify_bg(gtk.STATE_NORMAL, gtk.gdk.color_parse('black'))
-        self.datelabel = gtk.Label(_('Select a date (double-click)'))
-        self.vbox.pack_start(self.datelabel)
-        self.vbox.pack_end(self.calendar)
-        self.vbox.show_all()
-        palette.set_content(self.vbox)
+        palette.set_content(self._calendar)
+        self._calendar.show()
 
-    def __add_note_cb(self, widget):
-        self.notes_area.add_note(True, self.calendar.get_date())
+    def __add_note_cb(self, widget, toolbtn):
+        toolbtn.props.palette.popdown(immediate=True)
+        self.notes_area.add_note(True, self._calendar.get_date())
 
     def _active_remove(self, widget):
         self.notes_area.set_removing(widget.get_active())
