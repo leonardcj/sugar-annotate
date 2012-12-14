@@ -3,6 +3,7 @@
 
 # activity.py by:
 #    Agustin Zubiaga <aguz@sugarlabs.org>
+#    Ignacio Rodríguez <ignacio@sugarlabs.org>
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -32,6 +33,8 @@ from sugar.graphics.toolbutton import ToolButton
 from sugar.graphics.toggletoolbutton import ToggleToolButton
 
 from notes import NotesArea
+from help import helpwindow
+
 
 REMOVE_CURSOR = os.path.join(activity.get_bundle_path(),
                              'cursors',
@@ -45,6 +48,12 @@ class Annotate(activity.Activity):
         activity.Activity.__init__(self, handle, True)
 
         self.max_participants = 1
+        # CALENDAR
+        self.calendar = gtk.Calendar()
+        self.calendar.connect('day-selected-double-click', self.__add_note_cb)
+
+        # HELP WINDOW
+        self.helpwindow = helpwindow()
 
         # CANVAS
         scroll = gtk.ScrolledWindow()
@@ -65,9 +74,13 @@ class Annotate(activity.Activity):
         separator = gtk.SeparatorToolItem()
         toolbarbox.toolbar.insert(separator, -1)
 
+        helpbtn = ToolButton('helpbtn')
+        helpbtn.set_tooltip(_('Help'))
+        helpbtn.connect('clicked', self.help)
+
         note_add = ToolButton('gtk-add')
         note_add.set_tooltip(_('Add a note'))
-        note_add.connect('clicked', self.__add_note_cb)
+        note_add.connect('clicked', self._show_add_button_pallete)
         toolbarbox.toolbar.insert(note_add, -1)
 
         note_remove = ToggleToolButton('gtk-remove')
@@ -96,8 +109,8 @@ class Annotate(activity.Activity):
         toolbarbox.toolbar.insert(separator, -1)
 
         stopbtn = StopButton(self)
+        toolbarbox.toolbar.insert(helpbtn, -1)
         toolbarbox.toolbar.insert(stopbtn, -1)
-
         self.set_toolbar_box(toolbarbox)
 
         self.notes_area.connect('no-notes', self._no_notes,
@@ -105,6 +118,12 @@ class Annotate(activity.Activity):
         self.notes_area.connect('note-added', self._note_added, back, _next)
 
         self.show_all()
+
+        self._create_add_button_pallete(note_add)
+
+    def help(self, widget):
+        self.helpwindow.hide()
+        self.helpwindow.show()
 
     def _no_notes(self, widget, note_remove, back, _next):
         note_remove.set_active(False)
@@ -115,8 +134,21 @@ class Annotate(activity.Activity):
         back.set_sensitive(True)
         _next.set_sensitive(True)
 
+    def _show_add_button_pallete(self, widget):
+        widget.props.palette.popup(immediate=True, state=1)
+
+    def _create_add_button_pallete(self, button):
+        palette = button.get_palette()
+        self.vbox = gtk.VBox()
+        self.calendar.modify_bg(gtk.STATE_NORMAL, gtk.gdk.color_parse('black'))
+        self.datelabel = gtk.Label(_('Select a date (double-click)'))
+        self.vbox.pack_start(self.datelabel)
+        self.vbox.pack_end(self.calendar)
+        self.vbox.show_all()
+        palette.set_content(self.vbox)
+
     def __add_note_cb(self, widget):
-        self.notes_area.add_note(True)
+        self.notes_area.add_note(True, self.calendar.get_date())
 
     def _active_remove(self, widget):
         self.notes_area.set_removing(widget.get_active())
@@ -145,7 +177,6 @@ class Annotate(activity.Activity):
 
         f = open(file_path, 'w')
         data = [i.text for i in self.notes_area.notes]
-
         try:
             json.dump(tuple(data), f)
         finally:
