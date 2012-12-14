@@ -50,6 +50,8 @@ class Annotate(activity.Activity):
         
         # Calendar
         self._calendar = gtk.Calendar()
+        self._calendar_size_ready = False
+        self._calendar.connect('size_allocate', self._calendar_size_allocate)
 
         # TODO: Create a Help dialog like Implode
         #self._helpdialog = HelpDialog()
@@ -78,7 +80,8 @@ class Annotate(activity.Activity):
         note_add.connect('clicked', self._show_add_button_pallete)
         toolbarbox.toolbar.insert(note_add, -1)
 
-        self._calendar.connect('day-selected', self.__add_note_cb, note_add)
+        self._calendar.connect('day-selected-double-click', 
+                               self.__add_note_cb, note_add)
 
         note_remove = ToggleToolButton('gtk-remove')
         note_remove.set_tooltip(_('Remove notes'))
@@ -141,6 +144,13 @@ class Annotate(activity.Activity):
         palette = button.get_palette()
         palette.set_content(self._calendar)
         self._calendar.show()
+        
+    def _calendar_size_allocate(self, widget, alloc):
+        if not self._calendar_size_ready:
+            self._calendar_size_ready = True
+            
+            # FIXME: Use a screen relative size
+            self._calendar.set_size_request(alloc.width + 40, -1)
 
     def __add_note_cb(self, widget, toolbtn):
         toolbtn.props.palette.popdown(immediate=True)
