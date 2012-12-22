@@ -184,8 +184,8 @@ class Annotate(activity.Activity):
     def write_file(self, file_path):
         self.notes_area.set_removing(True)
         notesdate = []
-        for x in self.notes_area.notesdate:
-            notesdate.append(x)
+        for date in self.notes_area.notesdate:
+            notesdate.append(date)
         f = open(file_path, 'w')
         data = {'text': [i.text for i in self.notes_area.notes],
                 'date': notesdate}
