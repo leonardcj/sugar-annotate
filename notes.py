@@ -175,9 +175,9 @@ class Note(gtk.DrawingArea):
     def __init__(self, notes_area, fade_in=False, date=None):
 
         gtk.DrawingArea.__init__(self)
-        
+
         # Simple tooltip with date.
-        try: # If not loaded from journal.
+        try:  # If not loaded from journal.
             day = str(date[2])
             month = str(int(date[1] + 1))
             year = str(date[0])
