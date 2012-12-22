@@ -183,6 +183,8 @@ class Annotate(activity.Activity):
 
         f = open(file_path, 'w')
         data = [i.text for i in self.notes_area.notes]
+        datadate = [i.text for i in self.notes_area.notesdate]
+        print datadate
         try:
             json.dump(tuple(data), f)
         finally:

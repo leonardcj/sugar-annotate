@@ -68,6 +68,7 @@ class NotesArea(gtk.EventBox):
         self.add(self.mainbox)
         self.groups = []
         self.notes = []
+        self.notesdate = []
         self.removing = False
 
         self.modify_bg(gtk.STATE_NORMAL, WHITE)
@@ -111,6 +112,11 @@ class NotesArea(gtk.EventBox):
         if last_box.space == SPACE_DEFAULT - 1:
             last_box.show_all()
         self.notes.append(note)
+        day = str(date[2])
+        month = str(int(date[1] + 1))
+        year = str(date[0])
+        formatdate = str(day + '/' + month + '/' + year)
+        self.notesdate.append(formatdate)
         note.fixed.show_all()
         note.textview.frame.hide()
 
