@@ -173,19 +173,25 @@ class Annotate(activity.Activity):
             data = json.load(f)
         finally:
             f.close()
-
-        for i in data:
-            note = self.notes_area.add_note(True)
+        notes = data['text']
+        dates = data['date']
+        for i in notes:
+            for x in dates:
+				date = x
+            note = self.notes_area.add_note(True,date)
             note.set_text(i)
 
     def write_file(self, file_path):
         self.notes_area.set_removing(True)
-
+        notesdate = []
+        for x in self.notes_area.notesdate:
+            notesdate.append(x)
         f = open(file_path, 'w')
-        data = [i.text for i in self.notes_area.notes]
-        datadate = [i.text for i in self.notes_area.notesdate]
-        print datadate
+        data = {'text': [i.text for i in self.notes_area.notes],
+                'date': notesdate}
         try:
-            json.dump(tuple(data), f)
+            json.dump(data, f)
         finally:
             f.close()
+
+        
