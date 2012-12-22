@@ -112,10 +112,15 @@ class NotesArea(gtk.EventBox):
         if last_box.space == SPACE_DEFAULT - 1:
             last_box.show_all()
         self.notes.append(note)
-        day = str(date[2])
-        month = str(int(date[1] + 1))
-        year = str(date[0])
-        formatdate = str(day + '/' + month + '/' + year)
+        # If not loaded from journal.
+        try:
+            day = str(date[2])
+            month = str(int(date[1] + 1))
+            year = str(date[0])
+            formatdate = str(day + '/' + month + '/' + year)
+        # Loaded from journal.
+        except:
+            formatdate = date
         self.notesdate.append(formatdate)
         note.fixed.show_all()
         note.textview.frame.hide()
@@ -172,13 +177,15 @@ class Note(gtk.DrawingArea):
         gtk.DrawingArea.__init__(self)
         
         # Simple tooltip with date.
-        if date is not None:
+        try: # If not loaded from journal.
             day = str(date[2])
             month = str(int(date[1] + 1))
             year = str(date[0])
             self._date = [day, month, year]
             self.set_tooltip_text(str(day + '/' + month + '/' + year))
-
+        except:
+            self._date = date
+            self.set_tooltip_text(date)
         self.set_size_request(NOTE_WIDTH, NOTE_HEIGHT)
 
         self.text = ''
